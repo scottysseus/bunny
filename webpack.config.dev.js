@@ -1,13 +1,17 @@
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const HTMLWebpackPlugin = require('html-webpack-plugin')
+const path = require("path");
 
 module.exports = {
     mode: 'development',
     devServer: {
-        contentBase: 'dist',
+        contentBase: 'doc',
         port: 3000
     },
     devtool: 'inline-source-map',
+    output: {
+        path: path.resolve(__dirname, 'doc')
+    },
     plugins: [
         new CopyWebpackPlugin({
             patterns: [{
