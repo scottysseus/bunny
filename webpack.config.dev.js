@@ -5,12 +5,12 @@ const path = require("path");
 module.exports = {
     mode: 'development',
     devServer: {
-        contentBase: 'doc',
+        contentBase: 'docs',
         port: 3000
     },
     devtool: 'inline-source-map',
     output: {
-        path: path.resolve(__dirname, 'doc')
+        path: path.resolve(__dirname, 'docs')
     },
     plugins: [
         new CopyWebpackPlugin({
