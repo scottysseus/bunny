@@ -1,47 +1,32 @@
-import { WIDTH, HEIGHT, PLAYER_SPEED } from ".";
-import { boxesIntersect } from "./collision";
-import { knockedBack } from "./playerStates";
+import { updateLocation } from "./transform";
+import { WIDTH } from ".";
 
-export function patrolling(enemy, player) {
-    let oldX = enemy.x;
-    updateEnemyLocation(enemy);
-    if (oldX === enemy.x) {
-        enemy.stateFunc = pausing;
-    }
-
-    if (boxesIntersect(player, enemy)) {
-        player.stateFunc = knockedBack;
-        if (player.dx == 0) {
-            player.dx = PLAYER_SPEED * -Math.sign(enemy.dx);
-        }
-    }
-}
-
-export function pausing(enemy, player) {
-    if (!enemy.pausingFrames) {
-        enemy.pausingFrames = 30;
-        enemy.gotoAndStop(0);
-    }
-    enemy.textures = [enemy.restFrame];
-
-    enemy.pausingFrames -= 1;
-    if (!enemy.pausingFrames) {
-        enemy.stateFunc = patrolling;
-        enemy.textures = enemy.walkingFrames;
-        enemy.scale.x *= -1;
-        enemy.dx *= -1;
-        enemy.play();
-    }
-}
-
-function updateEnemyLocation(enemy) {
-    const newEnemyX = enemy.x + enemy.dx;
-    const newEnemyY = enemy.y + enemy.dy;
-    if (newEnemyX >= 400 + enemy.width / 2 && newEnemyX <= WIDTH - enemy.width / 2) {
-        enemy.x = newEnemyX;
-    }
+export function patrolling(enemyState) {
+    let oldX = enemyState.x;
     
-    if (newEnemyY >= 0 && newEnemyY <= HEIGHT) {
-        enemy.y = newEnemyY;
+    const newState = updateLocation(enemyState);
+    if (newState.x >= 400 + enemyState.width / 2 && newState.y <= WIDTH - enemyState.width / 2) {
+        enemyState = newState;
     }
+
+    if (oldX === enemyState.x) {
+        enemyState.stateFunc = pausing;
+    }
+    return enemyState;
+}
+
+export function pausing(enemyState) {
+    if (!enemyState.pausingFrames) {
+        enemyState.pausingFrames = 30;
+    }
+    enemyState.textures = [enemyState.restFrame];
+
+    enemyState.pausingFrames -= 1;
+    if (!enemyState.pausingFrames) {
+        enemyState.stateFunc = patrolling;
+        enemyState.textures = enemyState.walkingFrames;
+        enemyState.scale.x *= -1;
+        enemyState.dx *= -1;
+    }
+    return enemyState;
 }
