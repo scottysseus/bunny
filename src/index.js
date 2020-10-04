@@ -84,7 +84,8 @@ function render(delta) {
     enemyState = enemyState.stateFunc(enemyState);
 
     if(playerState.stateFunc != knockedBack && boxesIntersect(player, enemy)) {
-        playerQueue.push({type: EventTypes.COLLISION, dx: enemyState.dx});
+        let eventDx = playerState.dx ? -playerState.dx : enemyState.dx;
+        playerQueue.push({type: EventTypes.COLLISION, dx: eventDx});
     }
 
     renderPlayer();
