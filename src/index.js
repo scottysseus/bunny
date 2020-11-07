@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import { controlled, EventTypes, processPlayerEvents, knockedBack } from './playerStates';
+import { controlled, EventTypes, processPlayerEvents, knockedBack, falling, jumping } from './playerStates';
 import { patrolling } from './enemyStates';
 import { boxesIntersect } from './collision';
 
@@ -12,27 +12,30 @@ export const ENEMY_SPEED = 2;
 let app = new PIXI.Application({ width: WIDTH, height: HEIGHT });
 document.body.appendChild(app.view);
 
+app.renderer.backgroundColor = 0x33ccff;
+
 const loader = PIXI.Loader.shared;
 
 loader.add('ground', 'assets/ground.png')
     .add('bunny', 'assets/bunny-sheet.png')
     .add('enemy', 'assets/enemy-sheet.png');
 
-let player, enemy;
-let playerState = {}, enemyState = {};
+let player, enemy, ground;
+let playerState = {}, enemyState = {}, envState = {};
 let playerQueue = [];
 
 loader.load((loader, resources) => {
-    let ground = new PIXI.Container();
+    ground = new PIXI.Container();
     for (let i = 0; i < 25; ++i) {
         let tile = new PIXI.Sprite(resources.ground.texture);
+        tile.anchor.set(0.5, 0.5)
         ground.addChild(tile);
-        tile.position.set(i * tile.width, HEIGHT - (tile.height));
+        tile.position.set((i * tile.width) + tile.width / 2, HEIGHT - (tile.height / 2));
     }
 
     let frames = [];
-    for (let i = 0; i < 4; ++i) {
-        frames.push(new PIXI.Texture(resources.bunny.texture, new PIXI.Rectangle(i * 48, 0, 48, 32)));
+    for (let i = 0; i < 3; ++i) {
+        frames.push(new PIXI.Texture(resources.bunny.texture, new PIXI.Rectangle(i * 28, 0, 28, 29)));
     }
     player = new PIXI.AnimatedSprite(frames);
 
@@ -49,20 +52,21 @@ loader.load((loader, resources) => {
     app.stage.addChild(player);
     app.stage.addChild(enemy);
 
-    playerState.scale = {x: 1, y: 1};
+    playerState.scale = {x: -1, y: 1};
     playerState.x = player.width;
     playerState.y = HEIGHT - ground.height - (player.height / 2);
     playerState.width = player.width;
     playerState.height = player.height;
-    player.animationSpeed = 0.3;
+    player.animationSpeed = 0.2;
+    player.scale.set(-1,1);
 
     playerState.dx = 0;
     playerState.dy = 0;
     player.anchor.set(0.5, 0.5);
     playerState.stateFunc = controlled;
 
-    enemy.scale.set(-2, 2);
-    enemyState.scale = {x: -2, y: 2};
+    enemy.scale.set(-1, 1);
+    enemyState.scale = {x: -1, y: 1};
     enemyState.x = 600;
     enemyState.y = HEIGHT - ground.height - (enemy.height / 2);
     enemyState.dx = ENEMY_SPEED;
@@ -79,14 +83,11 @@ loader.load((loader, resources) => {
 });
 
 function render(delta) {
+    playerState.bounds = player.getBounds();
+    enemyState.bounds = enemy.getBounds();
     playerState = processPlayerEvents(playerState, playerQueue);
-    playerState = playerState.stateFunc(playerState);
+    playerState = playerState.stateFunc(playerState, enemyState, envState);
     enemyState = enemyState.stateFunc(enemyState);
-
-    if(playerState.stateFunc != knockedBack && boxesIntersect(player, enemy)) {
-        let eventDx = playerState.dx ? -playerState.dx : enemyState.dx;
-        playerQueue.push({type: EventTypes.COLLISION, dx: eventDx});
-    }
 
     renderPlayer();
     renderEnemy();
@@ -97,8 +98,29 @@ function renderPlayer() {
     player.scale.set(playerState.scale.x, playerState.scale.y);
     if(playerState.stateFunc == controlled && playerState.dx !== 0) {
         player.play();
+    } else if(playerState.stateFunc == jumping) {
+        player.gotoAndStop(2);
+    } else if (playerState.stateFunc == falling) {
+        player.gotoAndStop(1);
     } else {
         player.gotoAndStop(0);
+    }
+
+    let onGround = false;
+    ground.children.forEach(element => {
+        if (boxesIntersect(player, element)) {
+            onGround = true;
+        }
+    });
+
+    if (!onGround && playerState.stateFunc != jumping) {
+        playerState.stateFunc = falling;
+    } else if(playerState.stateFunc == falling) {
+        playerState.dy = 0;
+        playerState.stateFunc = controlled;
+        if (!playerState.leftDown && !playerState.rightDown) {
+            playerState.dx = 0;
+        }
     }
 }
 
@@ -133,6 +155,9 @@ function setupKeyboard() {
                 break;
             case "ArrowRight":
                 playerQueue.push({ type: EventTypes.RIGHT_RELEASED });
+                break;
+            case "ArrowUp":
+                playerQueue.push({ type: EventTypes.UP_RELEASED });
                 break;
         }
     }, false);
