@@ -18,9 +18,10 @@ const loader = PIXI.Loader.shared;
 
 loader.add('ground', 'assets/ground.png')
     .add('bunny', 'assets/bunny-sheet.png')
+    .add('carrot', 'assets/carrot.png')
     .add('enemy', 'assets/enemy-sheet.png');
 
-let player, enemy, ground;
+let player, enemy, ground, carrots;
 let playerState = {}, enemyState = {}, envState = {};
 let playerQueue = [];
 
@@ -32,6 +33,13 @@ loader.load((loader, resources) => {
         ground.addChild(tile);
         tile.position.set((i * tile.width) + tile.width / 2, HEIGHT - (tile.height / 2));
     }
+
+    carrots = new PIXI.Container();
+    let carrot = new PIXI.Sprite(resources.carrot.texture);
+    carrot.dy = 0.3;
+    carrot.anchor.set(0.5, 0.5);
+    carrot.position.set(WIDTH - 425, HEIGHT - 60);
+    carrots.addChild(carrot);
 
     let frames = [];
     for (let i = 0; i < 3; ++i) {
@@ -49,6 +57,7 @@ loader.load((loader, resources) => {
     enemy.walkingFrames = walkingFrames;
 
     app.stage.addChild(ground);
+    app.stage.addChild(carrots);
     app.stage.addChild(player);
     app.stage.addChild(enemy);
 
@@ -91,6 +100,7 @@ function render(delta) {
 
     renderPlayer();
     renderEnemy();
+    renderCarrots();
 }
 
 function renderPlayer() {
@@ -132,6 +142,15 @@ function renderEnemy() {
     } else {
         enemy.gotoAndStop(0);
     }
+}
+
+function renderCarrots() {
+    carrots.children.forEach(carrot => {
+        if (carrot.y < HEIGHT - 60 || carrot.y > HEIGHT - 50) {
+            carrot.dy *= -1;
+        }
+        carrot.y += carrot.dy;
+    });
 }
 
 function setupKeyboard() {
