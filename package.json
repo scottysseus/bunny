@@ -12,6 +12,7 @@
   ],
   "author": "scottysseus",
   "dependencies": {
+    "pixi-sound": "^3.0.5",
     "pixi.js": "^5.3.3"
   },
   "devDependencies": {

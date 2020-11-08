@@ -1,4 +1,5 @@
 import * as PIXI from 'pixi.js';
+import sound from 'pixi-sound';
 import { controlled, EventTypes, processPlayerEvents, knockedBack, falling, jumping, goingLeft, goingRight } from './playerStates';
 import { patrolling } from './enemyStates';
 import { boxesIntersect } from './collision';
@@ -19,9 +20,13 @@ const loader = PIXI.Loader.shared;
 loader.add('ground', 'assets/ground.png')
     .add('bunny', 'assets/bunny-sheet.png')
     .add('carrot', 'assets/carrot.png')
+    .add('chew', 'assets/chewing.mp3')
     .add('enemy', 'assets/enemy-sheet.png');
 
 let player, enemy, ground, carrots;
+
+let chewingPlaying = false;
+
 let playerState = {}, enemyState = {}, envState = {};
 let playerQueue = [];
 
@@ -132,6 +137,13 @@ function renderPlayer() {
             playerState.dx = 0;
         }
     }
+
+    carrots.children.forEach(carrot => {
+        if (!chewingPlaying && boxesIntersect(player.getBounds(), carrot.getBounds())) {
+            sound.play('chew', {complete: () => chewingPlaying = false} );
+            chewingPlaying = true;
+        }
+    });
 }
 
 function renderEnemy() {
