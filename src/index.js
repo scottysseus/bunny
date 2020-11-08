@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import { controlled, EventTypes, processPlayerEvents, knockedBack, falling, jumping } from './playerStates';
+import { controlled, EventTypes, processPlayerEvents, knockedBack, falling, jumping, goingLeft, goingRight } from './playerStates';
 import { patrolling } from './enemyStates';
 import { boxesIntersect } from './collision';
 
@@ -128,7 +128,7 @@ function renderPlayer() {
     } else if(playerState.stateFunc == falling) {
         playerState.dy = 0;
         playerState.stateFunc = controlled;
-        if (!playerState.leftDown && !playerState.rightDown) {
+        if (!goingLeft(playerState) && !goingRight(playerState)) {
             playerState.dx = 0;
         }
     }

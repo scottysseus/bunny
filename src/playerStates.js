@@ -115,8 +115,16 @@ function goLeft(playerState) {
     return playerState;
 }
 
+export function goingLeft(playerState) {
+    return playerState.dx < 0 && playerState.leftDown;
+}
+
 function goRight(playerState) {
     playerState.dx = PLAYER_SPEED;
     playerState.scale.x = 1;
     return playerState;
+}
+
+export function goingRight(playerState) {
+    return playerState.dx > 0 && playerState.rightDown;
 }
