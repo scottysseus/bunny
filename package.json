@@ -21,6 +21,7 @@
     "babel-loader": "^8.1.0",
     "copy-webpack-plugin": "^6.1.0",
     "html-webpack-plugin": "^4.4.1",
+    "kbgb": "0.1.0-beta.1",
     "uglifyjs-webpack-plugin": "^2.2.0",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",
